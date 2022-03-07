@@ -24,4 +24,19 @@ class L1_Loss(nn.Module):
         loss21 = torch.mean(F.relu(self.gamma+dis_x1_x2-self.dis(x2_train, x2_neg1)))
         loss22 = torch.mean(F.relu(self.gamma+dis_x1_x2-self.dis(x2_train, x2_neg2)))
         loss = (loss11+loss12+loss21+loss22)/4
+        print("L1_Loss: {}".format(loss))
         return loss
+
+class L1_Loss_transe(nn.Module):
+    def __init__(self, lamda_=0.001):
+        super(L1_Loss_transe, self).__init__()
+        self.lamda_ = lamda_
+    
+    def forward(self, x1, x2, edge_index1, rel1, edge_index2, rel2):
+        h_ebd = torch.cat((x1[edge_index1[0]], x2[edge_index2[0]]))
+        t_ebd = torch.cat((x1[edge_index1[1]], x2[edge_index2[1]]))
+        r_ebd = torch.cat((x1[rel1], x2[rel2]))
+
+        loss = torch.mean(torch.sum(torch.abs(h_ebd + r_ebd - t_ebd), 1))
+        print("L1_Loss_transe: {}".format(loss))
+        return loss    

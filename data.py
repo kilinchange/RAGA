@@ -33,7 +33,7 @@ class DBP15K(InMemoryDataset):
         x1, edge_index1, rel1, assoc1 = self.process_graph(g1_path, x1_path, emb_path)
         x2, edge_index2, rel2, assoc2 = self.process_graph(g2_path, x2_path, emb_path)
 
-        pair_path = os.path.join(self.root, self.pair, 'ref_ent_ids')
+        pair_path = os.path.join(self.root, self.pair, 'ref_ent_ids')   # 种子对齐对 描述文件
         pair_set = self.process_pair(pair_path, assoc1, assoc2)
         pair_set = pair_set[:, torch.randperm(pair_set.size(1))]
         train_set = pair_set[:, :int(self.rate*pair_set.size(1))]
@@ -52,7 +52,7 @@ class DBP15K(InMemoryDataset):
 
     def process_graph(self, triple_path, ent_path, emb_path):
         g = read_txt_array(triple_path, sep='\t', dtype=torch.long)
-        subj, rel, obj = g.t()
+        subj, rel, obj = g.t()  # tensor 转置
         
         assoc = torch.full((rel.max().item()+1,), -1, dtype=torch.long)
         assoc[rel.unique()] = torch.arange(rel.unique().size(0))
@@ -68,11 +68,11 @@ class DBP15K(InMemoryDataset):
             embedding_list = torch.tensor(json.load(f))
         x = embedding_list[idx]
 
-        assoc = torch.full((idx.max().item()+1, ), -1, dtype=torch.long)
+        assoc = torch.full((idx.max().item()+1, ), -1, dtype=torch.long)    # 创建一个维度是 (idx.max().item()+1,)，填充值为 -1 的 tensor，即每个 实体or关系 都对应了一位
         assoc[idx] = torch.arange(idx.size(0))
         subj, obj = assoc[subj], assoc[obj]
-        edge_index = torch.stack([subj, obj], dim=0)
-        edge_index, rel = sort_edge_index(edge_index, rel)
+        edge_index = torch.stack([subj, obj], dim=0)        # edge_index 是一个二维 tensor, edge_index[:,0] 对应 (subj[0], obj[0])
+        edge_index, rel = sort_edge_index(edge_index, rel)      # 将 edge_index 排序，同时改变 rel 对应位置
         return x, edge_index, rel, assoc
 
     def process_pair(self, path, assoc1, assoc2):

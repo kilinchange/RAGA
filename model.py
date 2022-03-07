@@ -46,11 +46,18 @@ class GAT_E_to_R(nn.Module):
         
         e1 = self.a_h1(x_r_h).squeeze()[edge_index_h]+self.a_h2(x_r_t).squeeze()[edge_index_t]
         e2 = self.a_t1(x_r_h).squeeze()[edge_index_h]+self.a_t2(x_r_t).squeeze()[edge_index_t]
-        
+
+        # device = 'cuda' if torch.cuda.is_available() else 'cpu'
         alpha = softmax(F.leaky_relu(e1).float(), rel)
+        # n = softmax(F.leaky_relu(e1).float(), rel).size()[0]
+        # alpha = torch.tensor([1/n]*n).to(device)
+        
         x_r_h = spmm(torch.cat([rel.view(1, -1), edge_index_h.view(1, -1)], dim=0), alpha, rel.max()+1, x_e.size(0), x_r_h)
         
         alpha = softmax(F.leaky_relu(e2).float(), rel)
+        # n = softmax(F.leaky_relu(e2).float(), rel).size()[0]
+        # alpha = torch.tensor([1/n]*n).to(device)
+
         x_r_t = spmm(torch.cat([rel.view(1, -1), edge_index_t.view(1, -1)], dim=0), alpha, rel.max()+1, x_e.size(0), x_r_t)
         x_r = x_r_h+x_r_t
         return x_r
